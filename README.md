@@ -4,9 +4,9 @@
 
 In this project, we fine-tune open-source LLM (8B) and prompt closed-source LLM (175B) to improve upon the code review automation activities, specifically focusing on two tasks: review comment generation and code refinement generation. The dataset of this project is taken from Microsoft [CodeReviewer]((https://arxiv.org/pdf/2203.09095)) paper presented at ESEC/FSE 2022. While the training data is kept as it was, we consider a randomly sampled subset of 5000 entries for quickly reporting our initial results.
 
-## Part A. PEFT Fine-tuning of Llama 3 8B
+## Part A. QLoRA Fine-tuning of Llama 3 8B
 
-We want to make our experimental model familiar with code review focused knowledge. Hence, we choose to fine-tune one of the latest open-source LLMs: Llama 3 (8B).
+We want to make our experimental model familiar with code review focused knowledge, and at the same time fit into a local consumer GPU. Hence, we choose to fine-tune one of the latest open-source LLMs: Llama 3 (8B).
 
 ### Step 1: Data Preprocessing
 
