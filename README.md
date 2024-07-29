@@ -1,12 +1,16 @@
 # Fine-tuning and Prompting LLMs to Automate Code Review Activities
 
+## Introduction
+
+In this project, we fine-tune open-source LLM (8B) and prompt closed-source LLM (175B) to improve upon the code review automation activities, specifically focusing on two tasks: review comment generation and code refinement generation. The dataset of this project is taken from Microsoft [CodeReviewer]((https://arxiv.org/pdf/2203.09095)) paper presented at ESEC/FSE 2022. While the training data is kept as it was, we consider a randomly sampled subset of 5000 entries for quickly reporting our initial results.
+
 ## Part A. PEFT Fine-tuning of Llama 3 8B
 
-### Step 1: Tasks, Dataset and Preprocessing
+We want to make our experimental model familiar with code review focused knowledge. Hence, we choose to fine-tune one of the latest open-source LLMs: Llama 3 (8B).
 
-The dataset of this project is originally from Microsoft [CodeReviewer]((https://arxiv.org/pdf/2203.09095)) paper presented at ESEC/FSE 2022. While the training data is kept as it was, we consider a randomly sampled subset of 5000 entries for quickly reporting our initial results.
+### Step 1: Data Preprocessing
 
-We then modify all the datasets to be (alpaca-style) **instruction-following**. We denote natural language componet as nl and programming language component as pl in the dataset.
+For this part, we modify all the datasets to be (alpaca-style) **instruction-following**. We denote natural language componet as nl and programming language component as pl in the dataset.
 
 - **Review comment generation task**
     ```
@@ -39,7 +43,7 @@ We then modify all the datasets to be (alpaca-style) **instruction-following**. 
 
 ### Step 2: Parameter Efficient Supervised Fine-tuning (QLoRA) and Inference
 
-Now, we want to make our experimental model familiar with code review focused knowledge. Hence, we choose to fine-tune one of the latest open-source LLMs. To fine-tune the Llama 3 8B model, we use the [unsloth](https://github.com/unslothai/unsloth) framework, which offers faster training and inference speed for latest open-source LLMs. We adopt parameter efficient fine-tuning (PEFT) method (low-rank adaptation approach) with 4-bit quantization (QLoRA) to fit the weights and updates into a 16GB VRAM local machine. 
+We adopt parameter efficient fine-tuning (PEFT) method (low-rank adaptation approach) with 4-bit quantization (QLoRA) to fit the weights and updates into a 16GB VRAM local machine. To fine-tune the Llama 3 8B model, we use the [unsloth](https://github.com/unslothai/unsloth) framework, which offers faster training and inference speed for latest open-source LLMs. 
 
 The machine specs, all the hyperparameters along with the supervised fine-tuning process using huggingface trainer and wandb logger ecosystem can be found in this fine-tuning [notebook](/Fine-tuning/llama-3-train-test.ipynb). Take a closer look at this file to understand the training and inference details. 
 
@@ -74,23 +78,23 @@ To summarize, parameter-efficient, instruction-following supervised fine-tuning 
 
 ## Part B. Static Metadata Augmented Few-shot Prompting of GPT-3.5 
 
-We also prompt closed-source, proprietory LLM (OpenAI GPT-3.5 Turbo Instruct) in a few-shot prompt setting. 
+We also prompt closed-source, proprietory LLM (OpenAI GPT-3.5 Turbo Instruct with around 175B params) in a few-shot prompt setting. 
 
 ### Step 1: Dataset and Prompt Augmentation
 
-We use the same CodeReviewer original dataset as before, and add some modification to it. We augment a programming language component (function call graph) and a natural language component (code summary) to our prompt exemplars to improve upon previous results. 
+We use the same CodeReviewer original dataset as before, and add some modification to it. For this part, we augment a programming language component (function call graph) and a natural language component (code summary) to our prompt exemplars to improve upon previous results. 
 
 - **Review comment generation task**
     ```
     format after modification: 
 
     input:
-    patch
-    call graph
-    summary
+    diff hunk/code change (pl) 
+    function call graph (pl)
+    code summary (nl)
 
     output:
-    review comment
+    review comment (nl)
     ```
     - dataset after modification
         - Train set (skipped uploading due to size limit)
@@ -102,13 +106,13 @@ We use the same CodeReviewer original dataset as before, and add some modificati
     format after modification: 
     
     input:
-    old code
-    call graph
-    summary
-    review comment
+    old diff hunk/code change (pl)
+    function call graph (pl)
+    code summary (nl)
+    review comment (nl)
     
     output:
-    new code
+    new diff hunk/code change (pl)
     ```
     - dataset after modification
         - Train set (skipped uploading due to size limit)
@@ -116,13 +120,13 @@ We use the same CodeReviewer original dataset as before, and add some modificati
 
 
 - **Preprocessing details**
-    - Call graph was generated using [tree-sitter](https://tree-sitter.github.io/tree-sitter/), a popular open-source parser generator tool. Code summary was generated using SOTA code summarization model **CodeT5**. These two steps are not shown here in details. 
+    - Call graph was generated using [tree-sitter](https://tree-sitter.github.io/tree-sitter/), a popular open-source parser generator tool. Code summary was generated using SOTA code summarization model **CodeT5**. These two pre-processing steps are not shown here in details. 
 
 ### Step 2: Few-shot Prompting
 
 Now, we prompt the GPT-3.5 Turbo Instruct model to generate review comment and refined code based on our input format shown above (after modification). We experiment with 3 and 5 shot prompting with different values of model temperature to control the diversity and reproducibility.
 
-Check the python [script]((/Prompting/prompt_experiment_script.py)) used to prompt for all task and setting combinations.. A bash [script](/Prompting/run_experiment.sh) was used to automate the task. 
+Check the python [script]((/Prompting/prompt_experiment_script.py)) used to prompt for all task and setting combinations. A bash [script](/Prompting/run_experiment.sh) was used to automate the experiments. 
 
 ### Step 3: Evaluation and Metrics
 
@@ -145,4 +149,4 @@ We consider the best 1 out of 5 responses given by the model, and calculate aver
 | **Llama 3 (8B) [Fine-tuned]**       | **80.47**  | **0.237** | **0.9745**    |
 | GPT-3.5 Turbo (175B) [Prompted with Callgraph+Summary] | 79.46 | 0.107 | 0.9704 |
 
-To conclude, static semantic metadata augmented prompting with even larger language model like GPT-3.5 improves upon the existing pretrained and fine-tuned performance on the review comment generation task. On the other hand, GPT-3.5 prompting shows poor performance compared to the Llama fine-tuning approach on the code refinement generation task, although none of these could surpass the baseline pretrained model performance. Further improvement strategies may include retrieval-augmented generation over this setting. 
+To conclude, static semantic metadata augmented prompting with even larger language model like GPT-3.5 improves upon the existing pretrained and fine-tuned LLM performance on the review comment generation task. On the other hand, GPT-3.5 prompting shows poor performance compared to the Llama 3 fine-tuning approach on the code refinement generation task, although none of these could surpass the baseline pretrained model performance in this task. Further improvement strategies may include retrieval-augmented generation over this setting. 
