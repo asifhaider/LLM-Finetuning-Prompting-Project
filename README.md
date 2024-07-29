@@ -124,9 +124,13 @@ We use the same CodeReviewer original dataset as before, and add some modificati
 
 ### Step 2: Few-shot Prompting
 
-Now, we prompt the GPT-3.5 Turbo Instruct model to generate review comment and refined code based on our input format shown above (after modification). We experiment with 3 and 5 shot prompting with different values of model temperature to control the diversity and reproducibility.
+Now, we prompt the GPT-3.5 Turbo Instruct model to generate review comment and refined code based on our input format shown above (after modification). We experiment with 3 and 5 shot prompting with different values of model temperature to control the diversity and reproducibility. To filter out the most relevant few-shot samples from the training set for each experiment sample from test set, we use BM25 information retrieval algorithm. 
+
+![review](/Prompting/code-review%20pipeline.png)
 
 Check the python [script]((/Prompting/prompt_experiment_script.py)) used to prompt for all task and setting combinations. A bash [script](/Prompting/run_experiment.sh) was used to automate the experiments. 
+
+![refine](/Prompting/code-refinement%20pipeline.png)
 
 ### Step 3: Evaluation and Metrics
 
