@@ -6,11 +6,11 @@ In this project, we fine-tune open-source LLM (8B) and prompt closed-source LLM 
 
 ## Part A. QLoRA Fine-tuning of Llama 3 8B
 
-We want to make our experimental model familiar with code review focused knowledge, and at the same time fit into a local consumer GPU. Hence, we choose to fine-tune one of the latest open-source LLMs: Llama 3 (8B).
+We want to make our experimental model familiar with code review-focused knowledge, and at the same time fit into a local consumer GPU. Hence, we choose to fine-tune one of the latest open-source LLMs: Llama 3 (8B).
 
 ### Step 1: Data Preprocessing
 
-For this part, we modify all the datasets to be (alpaca-style) **instruction-following**. We denote natural language componet as nl and programming language component as pl in the dataset.
+For this part, we modify all the datasets to be (alpaca-style) **instruction-following**. We denote the natural language component as `nl` and the programming language component as `pl` in the dataset.
 
 - **Review comment generation task**
     ```
